@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deploy New Bot | Rahl Host</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .form-section {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    .form-section h2 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      color: #00ffff;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      color: #ccc;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #111;
+      color: #fff;
+    }
+    .deploy-btn {
+      margin-top: 25px;
+      padding: 12px 20px;
+      background: linear-gradient(to right, #00ffff, #0077ff);
+      border: none;
+      color: #000;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container form-section">
+    <h1>🚀 Deploy New Bot</h1>
+    <p>Configure your WhatsApp bot settings</p><form id="deployForm">
+  <label>Repo</label>
+  <select id="repo">
+    <option value="rahl-quantum">RAHL Quantum</option>
+  </select>
+
+  <label>APP_NAME</label>
+  <input type="text" id="appName" placeholder="e.g. rahl-md" required />
+
+  <label>SESSION_ID</label>
+  <input type="text" id="sessionId" placeholder="e.g. Rahl~session..." required />
+
+  <label>PREFIX</label>
+  <input type="text" id="prefix" placeholder="e.g. ." required />
+
+  <label>MODE</label>
+  <select id="mode">
+    <option value="public">Public</option>
+    <option value="private">Private</option>
+  </select>
+
+  <label>OWNER_NUMBER</label>
+  <input type="text" id="ownerNumber" placeholder="e.g. 2547...
+
