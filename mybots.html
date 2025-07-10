@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Bots | Rahl Host</title>
   <style>
@@ -65,12 +65,24 @@
       max-width: 900px;
       margin: 80px auto 0 auto;
     }
+    h1 {
+      color: #00ffff;
+      text-align: center;
+    }
     .bot-card {
       background: #111;
       border: 1px solid #333;
-      border-radius: 10px;
       padding: 20px;
       margin: 15px 0;
+      border-radius: 10px;
+    }
+    .bot-card h2 {
+      margin: 0 0 10px;
+      color: #00ffff;
+    }
+    .bot-card p {
+      margin: 5px 0;
+      font-size: 15px;
     }
     .footer {
       text-align: center;
@@ -93,19 +105,15 @@
   <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
   <div class="main-content">
-    <h1>🤖 My Bots</h1>
-    <div id="botList">
-      <p>Loading your bots...</p>
-    </div>
-    <div class="footer">
-      Made with 💻 by Lord Rahl • © 2025 Rahl Host. All rights reserved.
-    </div>
+    <h1>🤖 My Deployed Bots</h1>
+    <div id="botsList">Loading your bots...</div>
+    <div class="footer">© 2025 Rahl Host • Made with ⚡ by Lord Rahl</div>
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -132,30 +140,34 @@
       window.location.href = "login.html";
     };
 
+    const botsList = document.getElementById("botsList");
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
-      const botList = document.getElementById("botList");
       const q = query(collection(db, "bots"), where("ownerUid", "==", user.uid));
-      const snapshot = await getDocs(q);
+      const querySnapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        botList.innerHTML = `<p>You haven’t deployed any bots yet. <a href='deploy.html' style='color:#00ffff;'>Deploy your first bot</a>.</p>`;
+      if (querySnapshot.empty) {
+        botsList.innerHTML = "<p>No bots deployed yet.</p>";
         return;
       }
 
-      botList.innerHTML = "";
-      snapshot.forEach(doc => {
-        const bot = doc.data();
-        botList.innerHTML += `
+      let html = "";
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const date = new Date(data.deployedAt).toLocaleDateString();
+        html += `
           <div class="bot-card">
-            <h3>${bot.appName}</h3>
-            <p><strong>Session:</strong> ${bot.sessionId}</p>
-            <p><strong>Prefix:</strong> ${bot.prefix} | <strong>Mode:</strong> ${bot.mode}</p>
-            <p><strong>Status:</strong> ${bot.status || 'Active'}</p>
+            <h2>${data.appName}</h2>
+            <p><strong>Status:</strong> ${data.status || "Unknown"}</p>
+            <p><strong>Mode:</strong> ${data.mode}</p>
+            <p><strong>Owner:</strong> ${data.ownerNumber}</p>
+            <p><strong>Deployed:</strong> ${date}</p>
           </div>
         `;
       });
+      botsList.innerHTML = html;
     });
   </script>
 </body>
