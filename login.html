@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | Rahl Host</title>
+  <title>Login | Lord Rahl Host</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="form-container">
     <h1>👑 Welcome Back</h1>
-    <p>Log in to manage your bot sessions</p>
+    <p>Access your royal deployment panel</p>
     <form id="loginForm">
-      <input type="email" id="email" placeholder="Email" required />
+      <input type="email" id="email" placeholder="Email Address" required />
       <input type="password" id="password" placeholder="Password" required />
       <button type="submit">Login</button>
-      <p class="message">Don't have an account? <a href="signup.html">Sign up</a></p>
+      <p>Don’t have an account? <a href="signup.html">Sign Up</a></p>
     </form>
   </div>
 
@@ -32,10 +32,10 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        alert("Login successful!");
+        alert("✅ Logged in successfully!");
         window.location.href = "dashboard.html";
       } catch (error) {
-        alert("Login failed: " + error.message);
+        alert("⚠️ Login failed: " + error.message);
       }
     });
   </script>
