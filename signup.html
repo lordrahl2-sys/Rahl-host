@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign Up | Rahl Host</title>
+  <title>Sign Up | Lord Rahl Host</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="form-container">
-    <h1>👑 Rahl Host</h1>
-    <p>Create an account to deploy your bot</p>
+    <h1>👑 Create Account</h1>
+    <p>Join the Rahl network and power your bot</p>
     <form id="signupForm">
-      <input type="text" id="username" placeholder="Username (e.g. rahl_master)" required />
+      <input type="text" id="username" placeholder="Username" required />
       <input type="text" id="fullname" placeholder="Full Name" required />
-      <input type="email" id="email" placeholder="Email" required />
+      <input type="email" id="email" placeholder="Email Address" required />
       <input type="password" id="password" placeholder="Password" required />
       <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
       <input type="text" id="referral" placeholder="Referral Code (optional)" />
-      <button type="submit">Create Account</button>
-      <p class="message">Already have an account? <a href="login.html">Login</a></p>
+      <button type="submit">Sign Up</button>
+      <p>Already have an account? <a href="login.html">Login</a></p>
     </form>
   </div>
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module">
-    import { auth, db, createUserWithEmailAndPassword, doc, setDoc } from './firebase-config.js';
+    import { auth, db, doc, setDoc, createUserWithEmailAndPassword } from './firebase-config.js';
 
     const form = document.getElementById('signupForm');
 
@@ -38,11 +38,13 @@
       const confirmPassword = form.confirmPassword.value;
       const referral = form.referral.value.trim();
 
-      if (password !== confirmPassword) return alert("Passwords do not match.");
+      if (password !== confirmPassword) {
+        return alert("❌ Passwords do not match.");
+      }
 
-      const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      const strong = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/;
       if (!strong.test(password)) {
-        return alert("Password must be 8+ characters and include uppercase, number, and special char.");
+        return alert("❌ Password must be 8+ characters, include uppercase, number, and symbol.");
       }
 
       try {
@@ -57,10 +59,10 @@
           createdAt: new Date().toISOString()
         });
 
-        alert("Account created successfully!");
+        alert("✅ Account created! Welcome to the realm.");
         window.location.href = "dashboard.html";
       } catch (error) {
-        alert("Error: " + error.message);
+        alert("⚠️ Error: " + error.message);
       }
     });
   </script>
