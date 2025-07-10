@@ -10,6 +10,7 @@
       font-family: sans-serif;
       background-color: #0a0a0a;
       color: #fff;
+      transition: all 0.3s ease;
     }
     .sidebar {
       position: fixed;
@@ -47,16 +48,15 @@
       cursor: pointer;
       z-index: 1100;
     }
-    .form-section {
-      max-width: 800px;
-      margin: auto;
+    .main-content {
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
       padding: 20px;
-      padding-left: 240px;
+      max-width: 800px;
+      margin: 60px auto 0 auto;
     }
-    .form-section h2 {
-      margin-bottom: 10px;
-      font-size: 24px;
-      color: #00ffff;
+    .main-content.shifted {
+      margin-left: 240px;
     }
     label {
       display: block;
@@ -87,7 +87,6 @@
       margin-top: 60px;
       font-size: 13px;
       color: #666;
-      padding-left: 220px;
     }
   </style>
 </head>
@@ -100,7 +99,7 @@
     <a href="profile.html">👤 My Profile</a>
     <a href="deploy.html">⚙️ Deploy Bot</a>
     <a href="#" onclick="logout()">🚪 Logout</a>
-  </nav>  <div class="form-container form-section">
+  </nav>  <div class="main-content" id="mainContent">
     <h1>🚀 Deploy New Bot</h1>
     <p>Configure your WhatsApp bot settings</p><form id="deployForm">
   <label>Repo</label>
@@ -210,6 +209,7 @@
 
     window.toggleMenu = () => {
       document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("mainContent").classList.toggle("shifted");
     };
 
     window.logout = async () => {
