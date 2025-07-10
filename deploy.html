@@ -1,9 +1,9 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Deploy New Bot | Rahl Host</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       margin: 0;
@@ -14,14 +14,14 @@
     }
     .menu-toggle {
       position: fixed;
-      left: 15px;
-      top: 15px;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
       font-size: 24px;
       background: none;
       color: #00ffff;
       border: none;
       cursor: pointer;
-      z-index: 1100;
     }
     .sidebar {
       position: fixed;
@@ -64,7 +64,7 @@
     .main-content {
       padding: 20px;
       max-width: 800px;
-      margin: 60px auto 0 auto;
+      margin: 80px auto 0 auto;
     }
     label {
       display: block;
@@ -108,94 +108,99 @@
     <a href="deploy.html">⚙️ Deploy Bot</a>
     <a href="#" onclick="logout()">🚪 Logout</a>
   </nav>
-  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>  <div class="main-content">
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <div class="main-content">
     <h1>🚀 Deploy New Bot</h1>
-    <p>Configure your WhatsApp bot settings</p><form id="deployForm">
-  <label>Repo</label>
-  <select id="repo">
-    <option value="rahl-quantum">RAHL Quantum</option>
-  </select>
+    <p>Configure your WhatsApp bot settings</p>
 
-  <label>APP_NAME</label>
-  <input type="text" id="appName" placeholder="e.g. rahl-md" required />
+    <form id="deployForm">
+      <label>Repo</label>
+      <select id="repo">
+        <option value="rahl-quantum">RAHL Quantum</option>
+      </select>
 
-  <label>SESSION_ID</label>
-  <input type="text" id="sessionId" placeholder="e.g. Rahl~session..." required />
+      <label>APP_NAME</label>
+      <input type="text" id="appName" placeholder="e.g. rahl-md" required />
 
-  <label>PREFIX</label>
-  <input type="text" id="prefix" placeholder="e.g. ." required />
+      <label>SESSION_ID</label>
+      <input type="text" id="sessionId" placeholder="e.g. Rahl~session..." required />
 
-  <label>MODE</label>
-  <select id="mode">
-    <option value="public">Public</option>
-    <option value="private">Private</option>
-  </select>
+      <label>PREFIX</label>
+      <input type="text" id="prefix" placeholder="e.g. ." required />
 
-  <label>OWNER_NUMBER</label>
-  <input type="text" id="ownerNumber" placeholder="e.g. 2547..." required />
+      <label>MODE</label>
+      <select id="mode">
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+      </select>
 
-  <label>OWNER_NAME</label>
-  <input type="text" id="ownerName" placeholder="e.g. Lord Rahl" required />
+      <label>OWNER_NUMBER</label>
+      <input type="text" id="ownerNumber" placeholder="e.g. 2547..." required />
 
-  <label>CHATBOT</label>
-  <select id="chatbot">
-    <option value="false">False</option>
-    <option value="true">True</option>
-  </select>
+      <label>OWNER_NAME</label>
+      <input type="text" id="ownerName" placeholder="e.g. Lord Rahl" required />
 
-  <label>CHATBOT_MODE</label>
-  <select id="chatbotMode">
-    <option value="inbox">Inbox</option>
-    <option value="group">Group</option>
-  </select>
+      <label>CHATBOT</label>
+      <select id="chatbot">
+        <option value="false">False</option>
+        <option value="true">True</option>
+      </select>
 
-  <label>DM_PRESENCE</label>
-  <select id="dmPresence">
-    <option value="online">Online</option>
-    <option value="offline">Offline</option>
-  </select>
+      <label>CHATBOT_MODE</label>
+      <select id="chatbotMode">
+        <option value="inbox">Inbox</option>
+        <option value="group">Group</option>
+      </select>
 
-  <label>GC_PRESENCE</label>
-  <select id="gcPresence">
-    <option value="online">Online</option>
-    <option value="offline">Offline</option>
-  </select>
+      <label>DM_PRESENCE</label>
+      <select id="dmPresence">
+        <option value="online">Online</option>
+        <option value="offline">Offline</option>
+      </select>
 
-  <label>AUTO_READ_STATUS</label>
-  <select id="readStatus">
-    <option value="true">True</option>
-    <option value="false">False</option>
-  </select>
+      <label>GC_PRESENCE</label>
+      <select id="gcPresence">
+        <option value="online">Online</option>
+        <option value="offline">Offline</option>
+      </select>
 
-  <label>AUTO_LIKE_STATUS</label>
-  <select id="likeStatus">
-    <option value="true">True</option>
-    <option value="false">False</option>
-  </select>
+      <label>AUTO_READ_STATUS</label>
+      <select id="readStatus">
+        <option value="true">True</option>
+        <option value="false">False</option>
+      </select>
 
-  <label>STATUS_LIKE_EMOJIS</label>
-  <input type="text" id="emojis" placeholder="💛,❤️,💜,🤍,💙" />
+      <label>AUTO_LIKE_STATUS</label>
+      <select id="likeStatus">
+        <option value="true">True</option>
+        <option value="false">False</option>
+      </select>
 
-  <label>AUTO_REACT</label>
-  <select id="autoReact">
-    <option value="false">False</option>
-    <option value="true">True</option>
-  </select>
+      <label>STATUS_LIKE_EMOJIS</label>
+      <input type="text" id="emojis" placeholder="💛,❤️,💜,🤍,💙" />
 
-  <label>AUTO_READ_MESSAGES</label>
-  <select id="readMessages">
-    <option value="false">False</option>
-    <option value="true">True</option>
-  </select>
+      <label>AUTO_REACT</label>
+      <select id="autoReact">
+        <option value="false">False</option>
+        <option value="true">True</option>
+      </select>
 
-  <button type="submit" class="deploy-btn">🚀 Deploy Bot (10 Coins)</button>
-</form>
+      <label>AUTO_READ_MESSAGES</label>
+      <select id="readMessages">
+        <option value="false">False</option>
+        <option value="true">True</option>
+      </select>
 
-<div class="footer">
-  Made with 💻 by Lord Rahl • © 2025 Rahl Host. All rights reserved.
-</div>
+      <button type="submit" class="deploy-btn">🚀 Deploy Bot (10 Coins)</button>
+    </form>
 
-  </div>  <script type="module">
+    <div class="footer">
+      Made with 💻 by Lord Rahl • © 2025 Rahl Host. All rights reserved.
+    </div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -213,8 +218,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
-    const deployForm = document.getElementById("deployForm");
 
     window.toggleMenu = () => {
       document.getElementById("sidebar").classList.toggle("open");
@@ -240,7 +243,7 @@
         return;
       }
 
-      deployForm.addEventListener("submit", async (e) => {
+      document.getElementById("deployForm").addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const botData = {
@@ -275,5 +278,6 @@
         window.location.href = "dashboard.html";
       });
     });
-  </script></body>
+  </script>
+</body>
 </html>
