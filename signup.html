@@ -1,76 +1,174 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc,
-    updateDoc,
-    increment
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
-    authDomain: "rahl-host.firebaseapp.com",
-    projectId: "rahl-host",
-    storageBucket: "rahl-host.appspot.com",
-    messagingSenderId: "98638028534",
-    appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
-    measurementId: "G-5SD4095M7R"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const referrer = new URLSearchParams(window.location.search).get("ref");
-
-  document.getElementById("signup-btn").onclick = async () => {
-    const fullName = document.getElementById("fullName").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    if (!fullName || !email || !password) {
-      return alert("Please fill all fields.");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sign Up - Lord Rahl Bot Hosting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #0a0a0a;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
     }
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+    h1 {
+      color: #00ffff;
+      margin-bottom: 10px;
+    }
 
-      await setDoc(doc(db, "users", user.uid), {
-        fullName,
-        email,
-        coins: 10,
-        referredBy: referrer || null
-      });
+    form {
+      background: #111;
+      padding: 25px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 10px #00ffff55;
+    }
 
-      // Reward referrer if exists
-      if (referrer) {
-        const refSnap = await getDoc(doc(db, "referralIndex", referrer));
-        if (refSnap.exists()) {
-          const refUid = refSnap.data().uid;
-          await updateDoc(doc(db, "users", refUid), {
-            coins: increment(20)
-          });
-        }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #00ffff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .msg {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .success {
+      color: #00ff99;
+    }
+
+    a {
+      color: #00ffff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>👑 Sign Up</h1>
+  <p>Power Through Knowledge. Control Through Code.</p>
+
+  <form id="signupForm">
+    <input type="text" id="fullname" placeholder="Full Name" required />
+    <input type="text" id="username" placeholder="Username (unique)" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Create Account</button>
+    <div class="msg" id="message"></div>
+  </form>
+
+  <p class="msg">Already have an account? <a href="login.html">Login here</a></p>
+
+  <!-- ✅ Firebase Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+      authDomain: "rahl-host.firebaseapp.com",
+      projectId: "rahl-host",
+      storageBucket: "rahl-host.appspot.com",
+      messagingSenderId: "98638028534",
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("signupForm");
+    const message = document.getElementById("message");
+
+    // Get referral code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const referral = urlParams.get("ref") || null;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fullName = document.getElementById("fullname").value.trim();
+      const username = document.getElementById("username").value.trim().toLowerCase();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (username.includes(" ")) {
+        message.innerHTML = "<span class='error'>Username must not contain spaces.</span>";
+        return;
       }
 
-      // Store referral link for new user
-      await setDoc(doc(db, "referralIndex", fullName.toLowerCase().replace(/\\s+/g, '')), {
-        uid: user.uid
-      });
+      try {
+        const userRef = doc(db, "users", username);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          message.innerHTML = "<span class='error'>Username already taken.</span>";
+          return;
+        }
 
-      alert("Signup successful!");
-      window.location.href = "dashboard.html";
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
-    }
-  };
-</script>
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await updateProfile(user, { displayName: fullName });
+
+        await setDoc(doc(db, "users", username), {
+          uid: user.uid,
+          name: fullName,
+          email: email,
+          coins: 10,
+          referredBy: referral || null,
+          referralCode: username,
+          createdAt: new Date().toISOString()
+        });
+
+        message.innerHTML = "<span class='success'>Account created! Redirecting...</span>";
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 1500);
+      } catch (err) {
+        message.innerHTML = "<span class='error'>" + err.message + "</span>";
+      }
+    });
+  </script>
+</body>
+</html>
