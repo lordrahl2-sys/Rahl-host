@@ -3,60 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard</title>
+  <title>Dashboard | Rahl Host</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <script type="module" src="auth-protect.js"></script>
+  <div class="form-container">
+    <h1>👑 Rahl Host Panel</h1>
+    <p id="welcomeText">Loading user...</p>
 
-  <div class="container">
-    <h1>📂 Dashboard</h1>
-    <p>Upload your Baileys session file (`auth_info.json`)</p>
-
-    <input type="file" id="fileInput" accept=".json" />
-    <button id="uploadBtn">Upload Session</button>
-    <p id="uploadStatus"></p>
-
-    <hr />
-
-    <button onclick="deployBot()">🚀 Deploy Bot</button>
-    <p><a href="#" id="logoutBtn">Logout</a></p>
+    <div style="margin-top: 30px;">
+      <a href="#" id="uploadLink">📂 Upload Session File</a><br/><br/>
+      <a href="#" id="logoutBtn" style="color: red;">🚪 Logout</a>
+    </div>
   </div>
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module">
-    import { auth, storage, ref, uploadBytes, signOut } from './firebase-config.js';
+    import { auth, db, doc, getDoc, signOut } from './firebase-config.js';
 
-    // Upload session
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadStatus = document.getElementById('uploadStatus');
-
-    uploadBtn.addEventListener('click', async () => {
-      const file = fileInput.files[0];
-      if (!file) {
-        uploadStatus.textContent = "Please select a file.";
-        return;
-      }
-
-      const storageRef = ref(storage, 'sessions/' + file.name);
-      try {
-        await uploadBytes(storageRef, file);
-        uploadStatus.textContent = "✅ Session uploaded successfully!";
-      } catch (err) {
-        uploadStatus.textContent = "❌ Upload failed: " + err.message;
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.getElementById('welcomeText').textContent = `Welcome, ${data.fullname} (@${data.username})`;
+        } else {
+          document.getElementById('welcomeText').textContent = "Welcome!";
+        }
+      } else {
+        window.location.href = "login.html";
       }
     });
 
-    // Deploy Bot (placeholder)
-    window.deployBot = () => {
-      alert("🚀 Deploy triggered (add your webhook here)");
-    };
-
-    // Logout
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await signOut(auth);
-      window.location.href = 'login.html';
+      window.location.href = "login.html";
+    });
+
+    document.getElementById('uploadLink').addEventListener('click', () => {
+      alert("Upload panel coming next! 🔥");
     });
   </script>
 </body>
