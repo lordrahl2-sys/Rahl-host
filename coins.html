@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Coins | Rahl Host</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #0a0a0a;
+      color: #fff;
+    }
+    .menu-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
+      font-size: 24px;
+      background: none;
+      color: #00ffff;
+      border: none;
+      cursor: pointer;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 220px;
+      background-color: #111;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 1050;
+      padding-top: 60px;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .sidebar a {
+      display: block;
+      padding: 15px;
+      color: #fff;
+      text-decoration: none;
+      border-bottom: 1px solid #222;
+    }
+    .sidebar a:hover {
+      background: #222;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+    .overlay.active {
+      display: block;
+    }
+    .main-content {
+      padding: 20px;
+      max-width: 800px;
+      margin: 80px auto 0 auto;
+    }
+    .card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    .btn-daily {
+      padding: 10px 20px;
+      background: linear-gradient(to right, #00ffff, #0077ff);
+      border: none;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <nav class="sidebar" id="sidebar">
+    <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="mybots.html">🤖 My Bots</a>
+    <a href="coins.html">💰 My Coins</a>
+    <a href="profile.html">👤 My Profile</a>
+    <a href="deploy.html">⚙️ Deploy Bot</a>
+    <a href="#" onclick="logout()">🚪 Logout</a>
+  </nav>
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <div class="main-content">
+    <h1>💰 My Coins</h1>
+    <div class="card">Current Balance: <span id="coins">0</span></div>
+    <div class="card">
+      <p>🎁 Claim 20 coins daily</p>
+      <button id="dailyButton" class="btn-daily">Claim Daily Coins</button>
+    </div>
+    <div class="card">
+      <p>🔗 Earn 20 coins per referral</p>
+      <p>Your Referral Link:</p>
+      <p id="refLink">Loading...</p>
+    </div>
+    <div class="footer">
+      Made with 💻 by Lord Rahl • © 2025 Rahl Host. All rights reserved.
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+      authDomain: "rahl-host.firebaseapp.com",
+      projectId: "rahl-host",
+      storageBucket: "rahl-host.appspot.com",
+      messagingSenderId: "98638028534",
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.toggleMenu = () => {
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("active");
+    };
+
+    window.logout = async () => {
+      await signOut(auth);
+      alert("Signed out.");
+      window.location.href = "login.html";
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "login.html";
+
+      const refLink = `https://host.giftedtech.web.id/signup?ref=${user.displayName || user.email.split("@")[0]}`;
+      document.getElementById("refLink").textContent = refLink;
+
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return alert("User data not found");
+
+      const data = snap.data();
+      document.getElementById("coins").textContent = data.coins || 0;
+
+      const today = new Date().toISOString().slice(0, 10);
+      const lastClaim = data.lastDailyClaim || "";
+      const dailyBtn = document.getElementById("dailyButton");
+
+      if (lastClaim === today) {
+        dailyBtn.disabled = true;
+        dailyBtn.textContent = "✅ Already Claimed Today";
+      } else {
+        dailyBtn.onclick = async () => {
+          await updateDoc(userRef, {
+            coins: (data.coins || 0) + 20,
+            lastDailyClaim: today
+          });
+          alert("🎉 20 coins added!");
+          location.reload();
+        };
+      }
+    });
+  </script>
+</body>
+</html>
