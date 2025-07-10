@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile | Rahl Host</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #0a0a0a;
+      color: #fff;
+    }
+    .menu-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
+      font-size: 24px;
+      background: none;
+      color: #00ffff;
+      border: none;
+      cursor: pointer;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 220px;
+      background-color: #111;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 1050;
+      padding-top: 60px;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .sidebar a {
+      display: block;
+      padding: 15px;
+      color: #fff;
+      text-decoration: none;
+      border-bottom: 1px solid #222;
+    }
+    .sidebar a:hover {
+      background: #222;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+    .overlay.active {
+      display: block;
+    }
+    .main-content {
+      padding: 20px;
+      max-width: 600px;
+      margin: 80px auto 0 auto;
+      text-align: center;
+    }
+    h1 {
+      color: #00ffff;
+    }
+    .profile-box {
+      background: #111;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      margin-bottom: 20px;
+    }
+    .profile-box p {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    .ref-box {
+      background: #111;
+      border: 1px solid #333;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .copy-btn {
+      margin-top: 10px;
+      background-color: #00ffff;
+      color: #000;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <nav class="sidebar" id="sidebar">
+    <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="mybots.html">🤖 My Bots</a>
+    <a href="coins.html">💰 My Coins</a>
+    <a href="profile.html">👤 My Profile</a>
+    <a href="deploy.html">⚙️ Deploy Bot</a>
+    <a href="#" onclick="logout()">🚪 Logout</a>
+  </nav>
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <div class="main-content">
+    <h1>👤 My Profile</h1>
+    <div class="profile-box">
+      <p><strong>Full Name:</strong> <span id="fullName">Loading...</span></p>
+      <p><strong>Email:</strong> <span id="email">Loading...</span></p>
+      <p><strong>Username:</strong> <span id="username">Loading...</span></p>
+    </div>
+    <div class="ref-box">
+      <p><strong>Your Referral Link:</strong></p>
+      <p id="refLink">Loading...</p>
+      <button class="copy-btn" onclick="copyReferral()">Copy Referral Link</button>
+    </div>
+    <div class="footer">© 2025 Rahl Host • Made with ⚡ by Lord Rahl</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+      authDomain: "rahl-host.firebaseapp.com",
+      projectId: "rahl-host",
+      storageBucket: "rahl-host.appspot.com",
+      messagingSenderId: "98638028534",
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.toggleMenu = () => {
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("active");
+    };
+
+    window.logout = async () => {
+      await signOut(auth);
+      alert("Signed out.");
+      window.location.href = "login.html";
+    };
+
+    const fullNameEl = document.getElementById("fullName");
+    const emailEl = document.getElementById("email");
+    const usernameEl = document.getElementById("username");
+    const refLinkEl = document.getElementById("refLink");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "login.html";
+
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      const data = snap.data();
+
+      fullNameEl.textContent = data.fullName;
+      emailEl.textContent = data.email;
+
+      const username = data.fullName.toLowerCase().replace(/\s+/g, '');
+      usernameEl.textContent = username;
+
+      const refLink = `https://your-domain.com/signup.html?ref=${username}`;
+      refLinkEl.textContent = refLink;
+    });
+
+    window.copyReferral = () => {
+      const text = document.getElementById("refLink").textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Referral link copied to clipboard!");
+      });
+    };
+  </script>
+</body>
+  </html>
