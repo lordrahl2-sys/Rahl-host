@@ -36,7 +36,7 @@
     }
 
     #dashboardLink {
-      display: none !important; /* 👑 Hidden by default */
+      display: none !important;
     }
 
     .brand {
@@ -52,15 +52,27 @@
       padding: 60px 20px;
     }
 
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
     .btn {
-      display: inline-block;
       background-color: #00ffff;
       color: #000;
       padding: 12px 25px;
       border-radius: 10px;
       text-decoration: none;
-      margin: 20px 10px;
       font-weight: bold;
+    }
+
+    .small-text {
+      margin-top: 25px;
+      color: #ccc;
+      font-size: 14px;
     }
 
     footer {
@@ -72,7 +84,7 @@
 </head>
 <body>
 
-  <!-- 🔱 Rahl Navbar -->
+  <!-- 🔱 Navbar -->
   <header>
     <div class="brand">
       👑 <a href="index.html">Lord Rahl Bot Hosting</a>
@@ -89,8 +101,13 @@
   <div class="main">
     <h1>Welcome to Lord Rahl's Bot Hosting Panel</h1>
     <p><strong>Power Through Knowledge. Control Through Code.</strong></p>
-    <a class="btn" href="signup.html">Get Started</a>
-    <a class="btn" href="login.html">Already have an account?</a>
+
+    <div class="btn-group">
+      <a class="btn" href="login.html">Login</a>
+      <a class="btn" href="signup.html">Sign Up</a>
+    </div>
+
+    <div class="small-text">Already have an account?</div>
   </div>
 
   <footer>
