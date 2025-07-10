@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard | Rahl Host</title>
+  <title>Dashboard | Lord Rahl</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="form-container">
-    <h1>👑 Rahl Host Panel</h1>
-    <p id="welcomeText">Loading user...</p>
+    <h1>👑 Rahl Control Panel</h1>
+    <p id="welcomeText">Loading your profile...</p>
 
     <div style="margin-top: 30px;">
-      <a href="#" id="uploadLink">📂 Upload Session File</a><br/><br/>
-      <a href="#" id="logoutBtn" style="color: red;">🚪 Logout</a>
+      <a href="upload.html">📂 Upload Session File</a><br><br>
+      <button id="logoutBtn" style="margin-top: 10px;">🚪 Logout</button>
     </div>
   </div>
 
@@ -21,28 +21,27 @@
   <script type="module">
     import { auth, db, doc, getDoc, signOut } from './firebase-config.js';
 
+    const welcomeText = document.getElementById('welcomeText');
+    const logoutBtn = document.getElementById('logoutBtn');
+
     auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          document.getElementById('welcomeText').textContent = `Welcome, ${data.fullname} (@${data.username})`;
-        } else {
-          document.getElementById('welcomeText').textContent = "Welcome!";
-        }
-      } else {
+      if (!user) {
         window.location.href = "login.html";
+      } else {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          welcomeText.textContent = `Welcome, ${data.fullname} (@${data.username})`;
+        } else {
+          welcomeText.textContent = `Welcome, Lord of Bots`;
+        }
       }
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
+    logoutBtn.addEventListener('click', async () => {
       await signOut(auth);
+      alert("Signed out!");
       window.location.href = "login.html";
-    });
-
-    document.getElementById('uploadLink').addEventListener('click', () => {
-      alert("Upload panel coming next! 🔥");
     });
   </script>
 </body>
