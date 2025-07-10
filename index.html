@@ -2,19 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Lord Rahl Bot Hosting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lord Rahl Bot Host</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0a0a0a;
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      background-color: #000;
+      color: #00ffff;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 5px #00ffff44;
+    }
+
+    header a {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 15px;
+      font-weight: bold;
+    }
+
+    header a:hover {
+      text-decoration: underline;
+    }
+
+    .brand {
+      font-size: 18px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .main {
+      padding: 60px 20px;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #00ffff;
+      color: #000;
+      padding: 12px 25px;
+      border-radius: 10px;
+      text-decoration: none;
+      margin: 20px 10px;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 80px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>👑 Lord Rahl Bot Hosting</h1>
-    <p>Power Through Knowledge. Control Through Code.</p>
-    <div class="buttons">
+
+  <!-- 🔱 Rahl Navbar -->
+  <header>
+    <div class="brand">
+      👑 <a href="index.html">Lord Rahl Bot Hosting</a>
+      <div class="subtitle">Power Through Knowledge. Control Through Code.</div>
+    </div>
+    <div id="navLinks">
       <a href="login.html">Login</a>
       <a href="signup.html">Sign Up</a>
-      <a href="dashboard.html">Dashboard</a>
+      <a href="dashboard.html" id="dashboardLink" style="display: none;">Dashboard</a>
     </div>
+  </header>
+
+  <!-- 👑 Welcome Section -->
+  <div class="main">
+    <h1>Welcome to Lord Rahl's Bot Hosting Panel</h1>
+    <p>Deploy powerful WhatsApp bots with ease, manage them all in one place, and earn coins daily or through referrals.</p>
+    <a class="btn" href="signup.html">Get Started</a>
+    <a class="btn" href="login.html">Already have an account?</a>
   </div>
+
+  <footer>
+    Crafted by Lord Rahl • © 2025 Rahl Host. All rights reserved.
+  </footer>
+
+  <!-- ✅ Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+      authDomain: "rahl-host.firebaseapp.com",
+      projectId: "rahl-host",
+      storageBucket: "rahl-host.appspot.com",
+      messagingSenderId: "98638028534",
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const dashboardLink = document.getElementById("dashboardLink");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        dashboardLink.style.display = "inline";
+      } else {
+        dashboardLink.style.display = "none";
+      }
+    });
+  </script>
+
 </body>
 </html>
