@@ -3,53 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RAHL Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Dashboard | Rahl Host</title>
   <style>
-    .dashboard {
-      max-width: 900px;
-      margin: auto;
-      padding: 30px;
-    }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 15px;
-      margin-top: 30px;
-    }
-
-    .card {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-    }
-
-    .card h2 {
-      font-size: 24px;
+    body {
       margin: 0;
+      font-family: sans-serif;
+      background-color: #0a0a0a;
+      color: #fff;
+    }
+
+    .menu-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
+      font-size: 24px;
+      background: none;
+      color: #00ffff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 220px;
+      background-color: #111;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 1050;
+      padding-top: 60px;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 15px;
+      color: #fff;
+      text-decoration: none;
+      border-bottom: 1px solid #222;
+    }
+
+    .sidebar a:hover {
+      background: #222;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .main-content {
+      padding: 20px;
+      max-width: 700px;
+      margin: 80px auto 0 auto;
+      text-align: center;
+    }
+
+    h1 {
       color: #00ffff;
     }
 
-    .card p {
-      font-size: 14px;
-      color: #aaa;
-    }
-
-    .button {
-      background: linear-gradient(to right, #00ffff, #0077ff);
-      border: none;
-      color: #000;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      margin-top: 20px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
+    .stat-box {
+      background: #111;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 10px;
+      border: 1px solid #333;
+      font-size: 24px;
     }
 
     .footer {
@@ -59,62 +95,57 @@
       color: #666;
     }
 
-    .ref-link {
-      word-break: break-all;
-      margin-top: 10px;
-      color: #00ffff;
-      font-size: 14px;
+    .deploy-btn {
+      display: inline-block;
+      margin: 20px auto;
+      padding: 12px 25px;
+      background: #00ffff;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <div class="form-container dashboard">
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
+  <nav class="sidebar" id="sidebar">
+    <a href="dashboard.html">🏠 Dashboard</a>
+    <a href="mybots.html">🤖 My Bots</a>
+    <a href="coins.html">💰 My Coins</a>
+    <a href="profile.html">👤 My Profile</a>
+    <a href="deploy.html">⚙️ Deploy Bot</a>
+    <a href="#" onclick="logout()">🚪 Logout</a>
+  </nav>
+
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <div class="main-content">
     <h1>👑 Rahl Host Panel</h1>
-    <p id="welcomeText">Welcome, loading user info...</p>
+    <p>Welcome, <span id="username">loading user info...</span></p>
 
-    <div class="metrics">
-      <div class="card">
-        <h2 id="botCount">0</h2>
-        <p>Total Bots</p>
-      </div>
-      <div class="card">
-        <h2 id="activeBots">0</h2>
-        <p>Active Bots</p>
-      </div>
-      <div class="card">
-        <h2 id="inactiveBots">0</h2>
-        <p>Inactive Bots</p>
-      </div>
-      <div class="card">
-        <h2 id="coinCount">10</h2>
-        <p>Coins</p>
-      </div>
-    </div>
+    <div class="stat-box" id="totalBots">0<br><small>Total Bots</small></div>
+    <div class="stat-box" id="activeBots">0<br><small>Active Bots</small></div>
+    <div class="stat-box" id="inactiveBots">0<br><small>Inactive Bots</small></div>
+    <div class="stat-box" id="coins">10<br><small>Coins</small></div>
 
-    <div style="margin-top: 30px;">
-      <p>No bots deployed yet</p>
-      <a class="button" href="deploy.html">🚀 Deploy New Bot</a>
-    </div>
+    <p>No bots deployed yet</p>
+    <a href="deploy.html" class="deploy-btn">🚀 Deploy New Bot</a>
 
-    <div style="margin-top: 40px;">
-      <h3>Referral Program</h3>
-      <p>Earn coins by referring friends</p>
-      <p class="ref-link" id="referralLink">Loading...</p>
-    </div>
+    <h3>Referral Program</h3>
+    <p>Earn coins by referring friends</p>
 
-    <div style="margin-top: 30px;">
-      <button class="button" id="logoutBtn">Logout</button>
-    </div>
+    <p id="refLink">Loading...</p>
+    <button onclick="copyReferral()">Copy Referral Link</button>
 
-    <div class="footer">
-      Crafted by <b>Lord Rahl</b> • © 2025 Rahl Host. All rights reserved.
-    </div>
+    <div class="footer">Crafted by Lord Rahl • © 2025 Rahl Host. All rights reserved.</div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -130,39 +161,57 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const welcomeText = document.getElementById("welcomeText");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const botCount = document.getElementById("botCount");
+    window.toggleMenu = () => {
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("active");
+    };
+
+    window.logout = async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    };
+
+    const usernameSpan = document.getElementById("username");
+    const totalBots = document.getElementById("totalBots");
     const activeBots = document.getElementById("activeBots");
     const inactiveBots = document.getElementById("inactiveBots");
-    const coinCount = document.getElementById("coinCount");
-    const referralLink = document.getElementById("referralLink");
+    const coinsEl = document.getElementById("coins");
+    const refLinkEl = document.getElementById("refLink");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.data();
+      const username = userData.fullName.toLowerCase().replace(/\s+/g, '');
 
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        welcomeText.textContent = `Welcome back, ${data.username}`;
-        referralLink.textContent = `https://rahl-host.web.app/signup?ref=${data.username}`;
+      usernameSpan.textContent = username;
+      refLinkEl.textContent = `https://rahl-host.vercel.app/signup.html?ref=${username}`;
 
-        botCount.textContent = data.totalBots || "0";
-        activeBots.textContent = data.activeBots || "0";
-        inactiveBots.textContent = data.inactiveBots || "0";
-        coinCount.textContent = data.coins || "10";
-      } else {
-        welcomeText.textContent = "Welcome back, Royal Coder";
-      }
+      const botQuery = query(collection(db, "bots"), where("ownerUid", "==", user.uid));
+      const snapshot = await getDocs(botQuery);
+
+      let total = 0;
+      let active = 0;
+
+      snapshot.forEach(doc => {
+        total++;
+        if (doc.data().status === "Active") active++;
+      });
+
+      const inactive = total - active;
+
+      totalBots.innerHTML = `${total}<br><small>Total Bots</small>`;
+      activeBots.innerHTML = `${active}<br><small>Active Bots</small>`;
+      inactiveBots.innerHTML = `${inactive}<br><small>Inactive Bots</small>`;
+      coinsEl.innerHTML = `${userData.coins || 0}<br><small>Coins</small>`;
     });
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      alert("Signed out.");
-      window.location.href = "login.html";
-    });
+    window.copyReferral = () => {
+      navigator.clipboard.writeText(refLinkEl.textContent).then(() => {
+        alert("Referral link copied!");
+      });
+    };
   </script>
 </body>
 </html>
