@@ -1,109 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sign Up - Lord Rahl Bot Hosting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      margin: 0;
-      background-color: #0a0a0a;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-    }
-
-    h1 {
-      color: #00ffff;
-      margin-bottom: 10px;
-    }
-
-    form {
-      background: #111;
-      padding: 25px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 0 10px #00ffff55;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #00ffff;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .msg {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #ccc;
-    }
-
-    .error {
-      color: red;
-    }
-
-    .success {
-      color: #00ff99;
-    }
-
-    a {
-      color: #00ffff;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <title>Sign Up - Lord Rahl</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-  <h1>👑 Sign Up</h1>
-  <p>Power Through Knowledge. Control Through Code.</p>
-
-  <form id="signupForm">
-    <input type="text" id="fullname" placeholder="Full Name" required />
-    <input type="text" id="username" placeholder="Username (unique)" required />
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <button type="submit">Create Account</button>
-    <div class="msg" id="message"></div>
-  </form>
-
-  <p class="msg">Already have an account? <a href="login.html">Login here</a></p>
-
-  <!-- ✅ Firebase Scripts -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      setDoc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <div class="container">
+    <h1>👑 Lord Rahl Bot Hosting</h1>
+    <p>Power Through Knowledge. Control Through Code.</p>
+    <form id="signupForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Create Account</button>
+    </form>
+    <p style="text-align:center; margin-top: 1rem;">
+      Already have an account? <a href="login.html">Login</a>
+    </p>
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -119,56 +36,43 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const form = document.getElementById("signupForm");
-    const message = document.getElementById("message");
-
-    // Get referral code from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const referral = urlParams.get("ref") || null;
-
-    form.addEventListener("submit", async (e) => {
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const fullName = document.getElementById("fullname").value.trim();
-      const username = document.getElementById("username").value.trim().toLowerCase();
-      const email = document.getElementById("email").value.trim();
+
+      const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      if (username.includes(" ")) {
-        message.innerHTML = "<span class='error'>Username must not contain spaces.</span>";
-        return;
-      }
-
       try {
-        const userRef = doc(db, "users", username);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          message.innerHTML = "<span class='error'>Username already taken.</span>";
-          return;
-        }
-
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        await updateProfile(user, { displayName: fullName });
-
-        await setDoc(doc(db, "users", username), {
-          uid: user.uid,
-          name: fullName,
+        // Save user with default coins and referralCode
+        await setDoc(doc(db, "users", user.uid), {
           email: email,
           coins: 10,
-          referredBy: referral || null,
-          referralCode: username,
-          createdAt: new Date().toISOString()
+          referralCode: user.uid,
+          createdAt: Date.now()
         });
 
-        message.innerHTML = "<span class='success'>Account created! Redirecting...</span>";
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 1500);
-      } catch (err) {
-        message.innerHTML = "<span class='error'>" + err.message + "</span>";
+        // Check for referral code
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get("ref");
+
+        if (ref && ref !== user.uid) {
+          const refDoc = doc(db, "users", ref);
+          const refSnap = await getDoc(refDoc);
+          if (refSnap.exists()) {
+            const currentCoins = refSnap.data().coins || 0;
+            await updateDoc(refDoc, {
+              coins: currentCoins + 20
+            });
+          }
+        }
+
+        window.location.href = "dashboard.html";
+      } catch (error) {
+        alert("Signup failed: " + error.message);
       }
     });
-  </script>
-</body>
+  </script></body>
 </html>
