@@ -3,44 +3,163 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard | Lord Rahl</title>
+  <title>RAHL Dashboard</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .dashboard {
+      max-width: 900px;
+      margin: auto;
+      padding: 30px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    .card h2 {
+      font-size: 24px;
+      margin: 0;
+      color: #00ffff;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    .button {
+      background: linear-gradient(to right, #00ffff, #0077ff);
+      border: none;
+      color: #000;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .ref-link {
+      word-break: break-all;
+      margin-top: 10px;
+      color: #00ffff;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-  <div class="form-container">
-    <h1>👑 Rahl Control Panel</h1>
-    <p id="welcomeText">Loading your profile...</p>
+  <div class="form-container dashboard">
+    <h1>👑 Rahl Host Panel</h1>
+    <p id="welcomeText">Welcome, loading user info...</p>
+
+    <div class="metrics">
+      <div class="card">
+        <h2 id="botCount">0</h2>
+        <p>Total Bots</p>
+      </div>
+      <div class="card">
+        <h2 id="activeBots">0</h2>
+        <p>Active Bots</p>
+      </div>
+      <div class="card">
+        <h2 id="inactiveBots">0</h2>
+        <p>Inactive Bots</p>
+      </div>
+      <div class="card">
+        <h2 id="coinCount">10</h2>
+        <p>Coins</p>
+      </div>
+    </div>
 
     <div style="margin-top: 30px;">
-      <a href="upload.html">📂 Upload Session File</a><br><br>
-      <button id="logoutBtn" style="margin-top: 10px;">🚪 Logout</button>
+      <p>No bots deployed yet</p>
+      <button class="button">🚀 Deploy New Bot</button>
+    </div>
+
+    <div style="margin-top: 40px;">
+      <h3>Referral Program</h3>
+      <p>Earn coins by referring friends</p>
+      <p class="ref-link" id="referralLink">Loading...</p>
+    </div>
+
+    <div style="margin-top: 30px;">
+      <button class="button" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="footer">
+      Crafted by <b>Lord Rahl</b> • © 2025 Rahl Host. All rights reserved.
     </div>
   </div>
 
-  <script type="module" src="firebase-config.js"></script>
   <script type="module">
-    import { auth, db, doc, getDoc, signOut } from './firebase-config.js';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const welcomeText = document.getElementById('welcomeText');
-    const logoutBtn = document.getElementById('logoutBtn');
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+      authDomain: "rahl-host.firebaseapp.com",
+      projectId: "rahl-host",
+      storageBucket: "rahl-host.appspot.com",
+      messagingSenderId: "98638028534",
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
+    };
 
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const welcomeText = document.getElementById("welcomeText");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const botCount = document.getElementById("botCount");
+    const activeBots = document.getElementById("activeBots");
+    const inactiveBots = document.getElementById("inactiveBots");
+    const coinCount = document.getElementById("coinCount");
+    const referralLink = document.getElementById("referralLink");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "login.html";
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        welcomeText.textContent = `Welcome back, ${data.username}`;
+        referralLink.textContent = `https://rahl-host.web.app/signup?ref=${data.username}`;
+
+        // Static for now, but can be pulled from DB
+        botCount.textContent = data.totalBots || "0";
+        activeBots.textContent = data.activeBots || "0";
+        inactiveBots.textContent = data.inactiveBots || "0";
+        coinCount.textContent = data.coins || "10";
       } else {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          welcomeText.textContent = `Welcome, ${data.fullname} (@${data.username})`;
-        } else {
-          welcomeText.textContent = `Welcome, Lord of Bots`;
-        }
+        welcomeText.textContent = "Welcome back, warrior";
       }
     });
 
-    logoutBtn.addEventListener('click', async () => {
+    logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
-      alert("Signed out!");
+      alert("Signed out.");
       window.location.href = "login.html";
     });
   </script>
