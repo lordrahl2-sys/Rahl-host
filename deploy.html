@@ -72,5 +72,137 @@
   </select>
 
   <label>OWNER_NUMBER</label>
-  <input type="text" id="ownerNumber" placeholder="e.g. 2547...
+  <input type="text" id="ownerNumber" placeholder="e.g. 2547..." required />
 
+  <label>OWNER_NAME</label>
+  <input type="text" id="ownerName" placeholder="e.g. Lord Rahl" required />
+
+  <label>CHATBOT</label>
+  <select id="chatbot">
+    <option value="false">False</option>
+    <option value="true">True</option>
+  </select>
+
+  <label>CHATBOT_MODE</label>
+  <select id="chatbotMode">
+    <option value="inbox">Inbox</option>
+    <option value="group">Group</option>
+  </select>
+
+  <label>DM_PRESENCE</label>
+  <select id="dmPresence">
+    <option value="online">Online</option>
+    <option value="offline">Offline</option>
+  </select>
+
+  <label>GC_PRESENCE</label>
+  <select id="gcPresence">
+    <option value="online">Online</option>
+    <option value="offline">Offline</option>
+  </select>
+
+  <label>AUTO_READ_STATUS</label>
+  <select id="readStatus">
+    <option value="true">True</option>
+    <option value="false">False</option>
+  </select>
+
+  <label>AUTO_LIKE_STATUS</label>
+  <select id="likeStatus">
+    <option value="true">True</option>
+    <option value="false">False</option>
+  </select>
+
+  <label>STATUS_LIKE_EMOJIS</label>
+  <input type="text" id="emojis" placeholder="💛,❤️,💜,🤍,💙" />
+
+  <label>AUTO_REACT</label>
+  <select id="autoReact">
+    <option value="false">False</option>
+    <option value="true">True</option>
+  </select>
+
+  <label>AUTO_READ_MESSAGES</label>
+  <select id="readMessages">
+    <option value="false">False</option>
+    <option value="true">True</option>
+  </select>
+
+  <button type="submit" class="deploy-btn">🚀 Deploy Bot (10 Coins)</button>
+</form>
+
+<div class="footer">
+  Made with 💻 by Lord Rahl • © 2025 Rahl Host. All rights reserved.
+</div>
+
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+      authDomain: "rahl-host.firebaseapp.com",
+      projectId: "rahl-host",
+      storageBucket: "rahl-host.appspot.com",
+      messagingSenderId: "98638028534",
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const deployForm = document.getElementById("deployForm");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "login.html";
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) return alert("User not found");
+
+      const userData = userSnap.data();
+      if ((userData.coins || 0) < 10) {
+        alert("⚠️ Not enough coins (10 needed)");
+        return;
+      }
+
+      deployForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const botData = {
+          repo: repo.value,
+          appName: appName.value,
+          sessionId: sessionId.value,
+          prefix: prefix.value,
+          mode: mode.value,
+          ownerNumber: ownerNumber.value,
+          ownerName: ownerName.value,
+          chatbot: chatbot.value,
+          chatbotMode: chatbotMode.value,
+          dmPresence: dmPresence.value,
+          gcPresence: gcPresence.value,
+          autoReadStatus: readStatus.value,
+          autoLikeStatus: likeStatus.value,
+          emojis: emojis.value,
+          autoReact: autoReact.value,
+          autoReadMessages: readMessages.value,
+          createdBy: user.uid,
+          createdAt: Date.now()
+        };
+
+        await setDoc(doc(collection(db, "bots")), botData);
+        await updateDoc(userRef, {
+          coins: userData.coins - 10,
+          totalBots: (userData.totalBots || 0) + 1,
+          activeBots: (userData.activeBots || 0) + 1
+        });
+
+        alert("✅ Bot deployed!");
+        window.location.href = "dashboard.html";
+      });
+    });
+  </script></body>
+</html>
