@@ -48,6 +48,8 @@
       font-weight: bold;
       margin-top: 20px;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
     }
 
     .footer {
@@ -91,7 +93,7 @@
 
     <div style="margin-top: 30px;">
       <p>No bots deployed yet</p>
-      <button class="button">🚀 Deploy New Bot</button>
+      <a class="button" href="deploy.html">🚀 Deploy New Bot</a>
     </div>
 
     <div style="margin-top: 40px;">
@@ -147,13 +149,12 @@
         welcomeText.textContent = `Welcome back, ${data.username}`;
         referralLink.textContent = `https://rahl-host.web.app/signup?ref=${data.username}`;
 
-        // Static for now, but can be pulled from DB
         botCount.textContent = data.totalBots || "0";
         activeBots.textContent = data.activeBots || "0";
         inactiveBots.textContent = data.inactiveBots || "0";
         coinCount.textContent = data.coins || "10";
       } else {
-        welcomeText.textContent = "Welcome back, warrior";
+        welcomeText.textContent = "Welcome back, Royal Coder";
       }
     });
 
