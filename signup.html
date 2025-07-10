@@ -3,37 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign Up</title>
+  <title>Sign Up | Rahl Host</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>📝 Create Your Account</h1>
+  <div class="form-container">
+    <h1>👑 Rahl Host</h1>
+    <p>Create an account to deploy your bot</p>
     <form id="signupForm">
+      <input type="text" id="username" placeholder="Username (e.g. rahl_master)" required />
+      <input type="text" id="fullname" placeholder="Full Name" required />
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Password" required />
-      <button type="submit">Sign Up</button>
+      <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+      <input type="text" id="referral" placeholder="Referral Code (optional)" />
+      <button type="submit">Create Account</button>
+      <p class="message">Already have an account? <a href="login.html">Login</a></p>
     </form>
-    <p>Already have an account? <a href="login.html">Login</a></p>
   </div>
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module">
-    import { auth, createUserWithEmailAndPassword } from './firebase-config.js'
+    import { auth, db, createUserWithEmailAndPassword, doc, setDoc } from './firebase-config.js';
 
-    const signupForm = document.getElementById('signupForm')
-    signupForm.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const email = document.getElementById('email').value
-      const password = document.getElementById('password').value
-      try {
-        await createUserWithEmailAndPassword(auth, email, password)
-        alert('Account created! Redirecting to dashboard...')
-        window.location.href = 'dashboard.html'
-      } catch (error) {
-        alert('Error: ' + error.message)
+    const form = document.getElementById('signupForm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = form.username.value.trim();
+      const fullname = form.fullname.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value;
+      const confirmPassword = form.confirmPassword.value;
+      const referral = form.referral.value.trim();
+
+      if (password !== confirmPassword) return alert("Passwords do not match.");
+
+      const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      if (!strong.test(password)) {
+        return alert("Password must be 8+ characters and include uppercase, number, and special char.");
       }
-    })
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+
+        await setDoc(doc(db, "users", uid), {
+          username,
+          fullname,
+          email,
+          referral,
+          createdAt: new Date().toISOString()
+        });
+
+        alert("Account created successfully!");
+        window.location.href = "dashboard.html";
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    });
   </script>
 </body>
 </html>
