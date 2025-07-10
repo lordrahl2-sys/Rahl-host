@@ -1,70 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign Up | Lord Rahl Host</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="form-container">
-    <h1>👑 Create Account</h1>
-    <p>Join the Rahl network and power your bot</p>
-    <form id="signupForm">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="text" id="fullname" placeholder="Full Name" required />
-      <input type="email" id="email" placeholder="Email Address" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
-      <input type="text" id="referral" placeholder="Referral Code (optional)" />
-      <button type="submit">Sign Up</button>
-      <p>Already have an account? <a href="login.html">Login</a></p>
-    </form>
-  </div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    increment
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module">
-    import { auth, db, doc, setDoc, createUserWithEmailAndPassword } from './firebase-config.js';
+  const firebaseConfig = {
+    apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
+    authDomain: "rahl-host.firebaseapp.com",
+    projectId: "rahl-host",
+    storageBucket: "rahl-host.appspot.com",
+    messagingSenderId: "98638028534",
+    appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+    measurementId: "G-5SD4095M7R"
+  };
 
-    const form = document.getElementById('signupForm');
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  const referrer = new URLSearchParams(window.location.search).get("ref");
 
-      const username = form.username.value.trim();
-      const fullname = form.fullname.value.trim();
-      const email = form.email.value.trim();
-      const password = form.password.value;
-      const confirmPassword = form.confirmPassword.value;
-      const referral = form.referral.value.trim();
+  document.getElementById("signup-btn").onclick = async () => {
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-      if (password !== confirmPassword) {
-        return alert("❌ Passwords do not match.");
+    if (!fullName || !email || !password) {
+      return alert("Please fill all fields.");
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        fullName,
+        email,
+        coins: 10,
+        referredBy: referrer || null
+      });
+
+      // Reward referrer if exists
+      if (referrer) {
+        const refSnap = await getDoc(doc(db, "referralIndex", referrer));
+        if (refSnap.exists()) {
+          const refUid = refSnap.data().uid;
+          await updateDoc(doc(db, "users", refUid), {
+            coins: increment(20)
+          });
+        }
       }
 
-      const strong = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-      if (!strong.test(password)) {
-        return alert("❌ Password must be 8+ characters, include uppercase, number, and symbol.");
-      }
+      // Store referral link for new user
+      await setDoc(doc(db, "referralIndex", fullName.toLowerCase().replace(/\\s+/g, '')), {
+        uid: user.uid
+      });
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const uid = userCredential.user.uid;
-
-        await setDoc(doc(db, "users", uid), {
-          username,
-          fullname,
-          email,
-          referral,
-          createdAt: new Date().toISOString()
-        });
-
-        alert("✅ Account created! Welcome to the realm.");
-        window.location.href = "dashboard.html";
-      } catch (error) {
-        alert("⚠️ Error: " + error.message);
-      }
-    });
-  </script>
-</body>
-</html>
+      alert("Signup successful!");
+      window.location.href = "dashboard.html";
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+</script>
