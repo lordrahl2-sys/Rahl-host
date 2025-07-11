@@ -62,30 +62,18 @@
     }
     .main-content {
       padding: 20px;
-      max-width: 700px;
-      margin: 80px auto 0 auto;
-      text-align: center;
+      max-width: 800px;
+      margin: 80px auto;
     }
-    .coin-box {
-      background: #111;
-      border-radius: 10px;
-      padding: 30px;
-      border: 1px solid #333;
-      margin-top: 40px;
-    }
-    .coin-box h2 {
-      color: #00ffff;
-      margin-bottom: 20px;
-    }
-    .claim-btn {
-      padding: 12px 24px;
+    .btn {
+      margin-top: 20px;
+      padding: 12px 20px;
       background: linear-gradient(to right, #00ffff, #0077ff);
       border: none;
       color: #000;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 20px;
     }
     .footer {
       text-align: center;
@@ -96,6 +84,7 @@
   </style>
 </head>
 <body>
+
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   <nav class="sidebar" id="sidebar">
     <a href="dashboard.html">🏠 Dashboard</a>
@@ -109,18 +98,16 @@
 
   <div class="main-content">
     <h1>💰 My Coins</h1>
-    <div class="coin-box">
-      <h2 id="coinCount">Coins: ...</h2>
-      <p id="lastClaimText">Last claimed: ...</p>
-      <button class="claim-btn" id="claimBtn">🎁 Claim Daily Reward (+20)</button>
-    </div>
-    <div class="footer">Made by Lord Rahl • © 2025</div>
+    <p>Your current coin balance:</p>
+    <h2 id="coinBalance">Loading...</h2>
+    <button class="btn" id="claimBtn">🪙 Claim Daily Coins (20)</button>
+    <div class="footer">© 2025 Rahl Host. All rights reserved.</div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -128,8 +115,7 @@
       projectId: "rahl-host",
       storageBucket: "rahl-host.appspot.com",
       messagingSenderId: "98638028534",
-      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
-      measurementId: "G-5SD4095M7R"
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -147,45 +133,62 @@
       window.location.href = "login.html";
     };
 
-    function formatDate(ts) {
-      const date = new Date(ts);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    }
+    const claimBtn = document.getElementById("claimBtn");
+    const coinBalance = document.getElementById("coinBalance");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
+
       const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) return alert("User not found.");
+      const snap = await getDoc(userRef);
+      const data = snap.data();
 
-      const data = userSnap.data();
-      document.getElementById("coinCount").textContent = `Coins: ${data.coins || 0}`;
+      coinBalance.innerText = `${data.coins || 0} coins`;
 
-      const lastClaim = data.lastClaim || 0;
-      document.getElementById("lastClaimText").textContent = lastClaim
-        ? `Last claimed: ${formatDate(lastClaim)}`
-        : "You haven't claimed yet.";
+      claimBtn.onclick = async () => {
+        const now = new Date();
+        const lastClaim = data.lastclaimed?.toDate?.() || new Date(0);
+        const msInDay = 24 * 60 * 60 * 1000;
 
-      document.getElementById("claimBtn").addEventListener("click", async () => {
-        const now = Date.now();
-        const midnight = new Date();
-        midnight.setUTCHours(0, 0, 0, 0);
-        const lastClaimDate = new Date(lastClaim);
-        lastClaimDate.setUTCHours(0, 0, 0, 0);
-
-        if (midnight.getTime() === lastClaimDate.getTime()) {
-          alert("🕛 You already claimed your daily reward. Come back tomorrow!");
+        if ((now - lastClaim) < msInDay) {
+          alert("⚠️ You already claimed your daily coins. Try again tomorrow.");
           return;
+        }
+
+        // reward referrer if first time claim
+        if (data.referredBy) {
+          const refQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
+          const refSnap = await getDocs(refQuery);
+
+          if (refSnap.empty) {
+            // Add to referrals and reward referrer
+            await setDoc(doc(collection(db, "referrals")), {
+              referredUserId: user.uid,
+              referrerUserId: data.referredBy,
+              rewardGiven: true,
+              timestamp: new Date()
+            });
+
+            const referrerQuery = query(collection(db, "users"), where("referralcode", "==", data.referredBy));
+            const referrerSnap = await getDocs(referrerQuery);
+
+            if (!referrerSnap.empty) {
+              const referrerDoc = referrerSnap.docs[0];
+              await updateDoc(referrerDoc.ref, {
+                coins: (referrerDoc.data().coins || 0) + 20
+              });
+            }
+          }
         }
 
         await updateDoc(userRef, {
           coins: (data.coins || 0) + 20,
-          lastClaim: now
+          lastclaimed: new Date()
         });
 
-        alert("🎉 You claimed 20 coins!");
-        location.reload();
-      });
+        alert("✅ You have received 20 coins!");
+        window.location.reload();
+      };
     });
   </script>
 </body>
