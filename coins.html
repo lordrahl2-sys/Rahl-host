@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Coins | Rahl Host</title>
+  <title>💰 My Coins | Rahl Host</title>
   <style>
     body {
       margin: 0;
@@ -62,17 +62,26 @@
     }
     .main-content {
       padding: 20px;
-      max-width: 800px;
-      margin: 80px auto;
+      max-width: 600px;
+      margin: 80px auto 0 auto;
+      text-align: center;
     }
-    .btn {
+    .coins-box {
+      font-size: 28px;
+      background: #111;
+      padding: 20px;
       margin-top: 20px;
-      padding: 12px 20px;
-      background: linear-gradient(to right, #00ffff, #0077ff);
-      border: none;
+      border-radius: 10px;
+      border: 1px solid #333;
+    }
+    button.claim-btn {
+      margin-top: 25px;
+      padding: 12px 25px;
+      background: linear-gradient(to right, #00ffcc, #0066ff);
       color: #000;
-      border-radius: 8px;
       font-weight: bold;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
     }
     .footer {
@@ -99,15 +108,17 @@
   <div class="main-content">
     <h1>💰 My Coins</h1>
     <p>Your current coin balance:</p>
-    <h2 id="coinBalance">Loading...</h2>
-    <button class="btn" id="claimBtn">🪙 Claim Daily Coins (20)</button>
+    <div class="coins-box" id="coinBalance">Loading...</div>
+
+    <button class="claim-btn" onclick="claimCoins()">🪙 Claim Daily Coins (20)</button>
+
     <div class="footer">© 2025 Rahl Host. All rights reserved.</div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -115,12 +126,17 @@
       projectId: "rahl-host",
       storageBucket: "rahl-host.appspot.com",
       messagingSenderId: "98638028534",
-      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7"
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    const coinBalanceEl = document.getElementById("coinBalance");
+    let currentUserRef;
+    let userData;
 
     window.toggleMenu = () => {
       document.getElementById("sidebar").classList.toggle("open");
@@ -129,67 +145,43 @@
 
     window.logout = async () => {
       await signOut(auth);
-      alert("Signed out.");
       window.location.href = "login.html";
     };
 
-    const claimBtn = document.getElementById("claimBtn");
-    const coinBalance = document.getElementById("coinBalance");
+    async function claimCoins() {
+      if (!userData || !currentUserRef) return;
+
+      const now = Timestamp.now();
+      const lastClaimed = userData.lastclaimed || Timestamp.fromDate(new Date(0));
+      const nextClaimTime = new Date(lastClaimed.toDate().getTime() + 24 * 60 * 60 * 1000);
+
+      if (now.toDate() < nextClaimTime) {
+        alert(`⏳ You can claim coins again after: ${nextClaimTime.toLocaleString()}`);
+        return;
+      }
+
+      const newCoins = (userData.coins || 0) + 20;
+
+      await updateDoc(currentUserRef, {
+        coins: newCoins,
+        lastclaimed: now
+      });
+
+      alert("✅ You claimed 20 coins!");
+      coinBalanceEl.textContent = `${newCoins}`;
+    }
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
-      const data = snap.data();
+      currentUserRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(currentUserRef);
+      if (!userSnap.exists()) return alert("User not found");
 
-      coinBalance.innerText = `${data.coins || 0} coins`;
-
-      claimBtn.onclick = async () => {
-        const now = new Date();
-        const lastClaim = data.lastclaimed?.toDate?.() || new Date(0);
-        const msInDay = 24 * 60 * 60 * 1000;
-
-        if ((now - lastClaim) < msInDay) {
-          alert("⚠️ You already claimed your daily coins. Try again tomorrow.");
-          return;
-        }
-
-        // reward referrer if first time claim
-        if (data.referredBy) {
-          const refQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
-          const refSnap = await getDocs(refQuery);
-
-          if (refSnap.empty) {
-            // Add to referrals and reward referrer
-            await setDoc(doc(collection(db, "referrals")), {
-              referredUserId: user.uid,
-              referrerUserId: data.referredBy,
-              rewardGiven: true,
-              timestamp: new Date()
-            });
-
-            const referrerQuery = query(collection(db, "users"), where("referralcode", "==", data.referredBy));
-            const referrerSnap = await getDocs(referrerQuery);
-
-            if (!referrerSnap.empty) {
-              const referrerDoc = referrerSnap.docs[0];
-              await updateDoc(referrerDoc.ref, {
-                coins: (referrerDoc.data().coins || 0) + 20
-              });
-            }
-          }
-        }
-
-        await updateDoc(userRef, {
-          coins: (data.coins || 0) + 20,
-          lastclaimed: new Date()
-        });
-
-        alert("✅ You have received 20 coins!");
-        window.location.reload();
-      };
+      userData = userSnap.data();
+      coinBalanceEl.textContent = userData.coins || 0;
     });
   </script>
+
 </body>
 </html>
