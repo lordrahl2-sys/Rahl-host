@@ -117,7 +117,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, updateDoc, increment, Timestamp
+      getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -126,7 +126,8 @@
       projectId: "rahl-host",
       storageBucket: "rahl-host.appspot.com",
       messagingSenderId: "98638028534",
-      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7"
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
+      measurementId: "G-5SD4095M7R"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -146,20 +147,24 @@
       window.location.href = "login.html";
     };
 
-    async function refreshCoins(userRef) {
-      const newSnap = await getDoc(userRef);
-      coinCount.textContent = newSnap.data().coins || 0;
-    }
-
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
       const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+      let userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        alert("User not found.");
-        return;
+        // Create the user doc if not found
+        await setDoc(userRef, {
+          coins: 0,
+          lastclaimed: new Date(0),
+          username: user.email.split('@')[0],
+          email: user.email,
+          referralcode: user.uid,
+          referredBy: "",
+          fullname: user.displayName || "User"
+        });
+        userSnap = await getDoc(userRef);
       }
 
       const userData = userSnap.data();
@@ -170,21 +175,25 @@
         const lastClaimed = userData.lastclaimed?.toDate?.() || new Date(0);
 
         if (now.toDateString() === lastClaimed.toDateString()) {
-          alert("❌ Already claimed today. Try again after midnight.");
+          alert("❌ You've already claimed today. Try again at midnight.");
           return;
         }
 
         try {
           await updateDoc(userRef, {
             coins: increment(20),
-            lastclaimed: Timestamp.fromDate(now)
+            lastclaimed: serverTimestamp()
           });
 
-          await refreshCoins(userRef);
+          // Re-fetch after update
+          const updatedSnap = await getDoc(userRef);
+          const updated = updatedSnap.data();
+          coinCount.textContent = updated.coins || 0;
+
           alert("✅ 20 coins claimed!");
           claimBtn.disabled = true;
         } catch (e) {
-          alert("❌ Error: " + e.message);
+          alert("❌ Error claiming coins: " + e.message);
         }
       };
     });
