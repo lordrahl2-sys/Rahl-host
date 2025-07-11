@@ -22,7 +22,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -52,31 +52,36 @@
         const user = userCredential.user;
         const uid = user.uid;
 
-        // Get referral code if any
+        // Read referral from URL
         const urlParams = new URLSearchParams(window.location.search);
         const ref = urlParams.get('ref');
 
-        // Add user to Firestore
+        // Set user data to Firestore
         await setDoc(doc(db, "users", uid), {
+          uid: uid,
           fullName,
           username,
           email,
           coins: 10,
-          referrer: ref || null,
-          createdAt: new Date().toISOString()
+          referralcode: username.toLowerCase(),
+          referredBy: ref || null,
+          role: "user",
+          lastclaimed: serverTimestamp(),
+          createdAt: serverTimestamp()
         });
 
-        // Update referrer coin balance
+        // Reward referrer if exists
         if (ref) {
           const refQuery = doc(db, "users", ref);
           const refSnap = await getDoc(refQuery);
           if (refSnap.exists()) {
-            const current = refSnap.data().coins || 0;
-            await updateDoc(refQuery, { coins: current + 20 });
+            await updateDoc(refQuery, {
+              coins: (refSnap.data().coins || 0) + 20
+            });
           }
         }
 
-        alert("Account created successfully!");
+        alert("✅ Account created successfully!");
         window.location.href = "dashboard.html";
 
       } catch (error) {
