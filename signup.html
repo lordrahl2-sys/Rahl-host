@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -17,12 +16,10 @@
       <button type="submit">Create Account</button>
     </form>
     <p>Already have an account? <a href="login.html">Login</a></p>
-  </div>
-
-  <script type="module">
+  </div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -52,32 +49,36 @@
         const user = userCredential.user;
         const uid = user.uid;
 
-        // Read referral from URL
+        // Get referral code from URL (e.g., ?ref=someusername)
         const urlParams = new URLSearchParams(window.location.search);
         const ref = urlParams.get('ref');
 
-        // Set user data to Firestore
+        // Create user document
         await setDoc(doc(db, "users", uid), {
-          uid: uid,
           fullName,
           username,
           email,
           coins: 10,
-          referralcode: username.toLowerCase(),
           referredBy: ref || null,
-          role: "user",
-          lastclaimed: serverTimestamp(),
-          createdAt: serverTimestamp()
+          referralcode: username,
+          lastclaimed: new Date(),
+          uid: uid
         });
 
-        // Reward referrer if exists
+        // Reward referrer if valid
         if (ref) {
-          const refQuery = doc(db, "users", ref);
-          const refSnap = await getDoc(refQuery);
-          if (refSnap.exists()) {
-            await updateDoc(refQuery, {
-              coins: (refSnap.data().coins || 0) + 20
-            });
+          const usersRef = collection(db, "users");
+          const q = query(usersRef, where("username", "==", ref));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const refDoc = querySnapshot.docs[0];
+            const refDocRef = doc(db, "users", refDoc.id);
+            const current = refDoc.data().coins || 0;
+            await updateDoc(refDocRef, { coins: current + 20 });
+            console.log("Referrer rewarded with 20 coins.");
+          } else {
+            console.warn("Referrer username not found.");
           }
         }
 
@@ -88,6 +89,5 @@
         alert("Signup Error: " + error.message);
       }
     });
-  </script>
-</body>
+  </script></body>
 </html>
