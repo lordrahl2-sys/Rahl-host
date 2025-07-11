@@ -2,106 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Daily Coins | Rahl Host</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Coins | Rahl Host</title>
   <style>
     body {
+      margin: 0;
       font-family: sans-serif;
-      background: #0a0a0a;
+      background-color: #0a0a0a;
       color: #fff;
-      padding: 20px;
-      text-align: center;
     }
-
-    .btn {
-      padding: 15px 30px;
-      font-size: 18px;
-      margin-top: 30px;
-      background-color: #00ffff;
-      color: #000;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .btn:disabled {
-      background-color: #444;
-      color: #999;
-      cursor: not-allowed;
-    }
-
-    .sidebar-btn {
+    .menu-toggle {
       position: fixed;
       top: 20px;
       left: 20px;
+      z-index: 1100;
       font-size: 24px;
       background: none;
       color: #00ffff;
       border: none;
       cursor: pointer;
-      z-index: 999;
     }
-
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 220px;
       height: 100%;
+      width: 220px;
       background-color: #111;
       transform: translateX(-100%);
       transition: transform 0.3s ease-in-out;
-      z-index: 998;
+      z-index: 1050;
       padding-top: 60px;
     }
-
     .sidebar.open {
       transform: translateX(0);
     }
-
     .sidebar a {
       display: block;
       padding: 15px;
       color: #fff;
       text-decoration: none;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid #222;
     }
-
     .sidebar a:hover {
       background: #222;
     }
-
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+    .overlay.active {
+      display: block;
+    }
+    .main-content {
+      padding: 20px;
+      max-width: 700px;
+      margin: 80px auto 0 auto;
+      text-align: center;
+    }
+    .coin-box {
+      background: #111;
+      border-radius: 10px;
+      padding: 30px;
+      border: 1px solid #333;
+      margin-top: 40px;
+    }
+    .coin-box h2 {
+      color: #00ffff;
+      margin-bottom: 20px;
+    }
+    .claim-btn {
+      padding: 12px 24px;
+      background: linear-gradient(to right, #00ffff, #0077ff);
+      border: none;
+      color: #000;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
     .footer {
-      margin-top: 50px;
-      color: #777;
+      text-align: center;
+      margin-top: 60px;
       font-size: 13px;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <button class="sidebar-btn" onclick="toggleSidebar()">☰</button>
-  <div class="sidebar" id="sidebar">
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <nav class="sidebar" id="sidebar">
     <a href="dashboard.html">🏠 Dashboard</a>
     <a href="mybots.html">🤖 My Bots</a>
     <a href="coins.html">💰 My Coins</a>
     <a href="profile.html">👤 My Profile</a>
     <a href="deploy.html">⚙️ Deploy Bot</a>
     <a href="#" onclick="logout()">🚪 Logout</a>
-  </div>
+  </nav>
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-  <h1>💰 My Coins</h1>
-  <p>Claim 20 coins daily to deploy your bot</p>
-  <p id="coinCount">Coins: loading...</p>
-  <button id="claimBtn" class="btn" disabled>Claim Daily Coins</button>
-
-  <div class="footer">
-    Crafted by Lord Rahl • © 2025 Rahl Host. All rights reserved.
+  <div class="main-content">
+    <h1>💰 My Coins</h1>
+    <div class="coin-box">
+      <h2 id="coinCount">Coins: ...</h2>
+      <p id="lastClaimText">Last claimed: ...</p>
+      <button class="claim-btn" id="claimBtn">🎁 Claim Daily Reward (+20)</button>
+    </div>
+    <div class="footer">Made by Lord Rahl • © 2025</div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -117,55 +136,56 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const claimBtn = document.getElementById("claimBtn");
-    const coinCount = document.getElementById("coinCount");
-
-    function toggleSidebar() {
+    window.toggleMenu = () => {
       document.getElementById("sidebar").classList.toggle("open");
-    }
+      document.getElementById("overlay").classList.toggle("active");
+    };
 
     window.logout = async () => {
       await signOut(auth);
+      alert("Signed out.");
       window.location.href = "login.html";
     };
 
-    function getToday() {
-      const now = new Date();
-      return now.toISOString().split("T")[0]; // YYYY-MM-DD
+    function formatDate(ts) {
+      const date = new Date(ts);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
     }
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
-
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) return alert("User not found.");
+
       const data = userSnap.data();
+      document.getElementById("coinCount").textContent = `Coins: ${data.coins || 0}`;
 
-      const coins = data.coins || 0;
-      const lastClaim = data.lastClaim || "";
+      const lastClaim = data.lastClaim || 0;
+      document.getElementById("lastClaimText").textContent = lastClaim
+        ? `Last claimed: ${formatDate(lastClaim)}`
+        : "You haven't claimed yet.";
 
-      coinCount.textContent = `Coins: ${coins}`;
+      document.getElementById("claimBtn").addEventListener("click", async () => {
+        const now = Date.now();
+        const midnight = new Date();
+        midnight.setUTCHours(0, 0, 0, 0);
+        const lastClaimDate = new Date(lastClaim);
+        lastClaimDate.setUTCHours(0, 0, 0, 0);
 
-      const today = getToday();
+        if (midnight.getTime() === lastClaimDate.getTime()) {
+          alert("🕛 You already claimed your daily reward. Come back tomorrow!");
+          return;
+        }
 
-      if (lastClaim !== today) {
-        claimBtn.disabled = false;
-        claimBtn.textContent = "Claim Daily Coins";
-        claimBtn.onclick = async () => {
-          await updateDoc(userRef, {
-            coins: increment(20),
-            lastClaim: today
-          });
+        await updateDoc(userRef, {
+          coins: (data.coins || 0) + 20,
+          lastClaim: now
+        });
 
-          claimBtn.disabled = true;
-          claimBtn.textContent = "Claimed ✓";
-          coinCount.textContent = `Coins: ${coins + 20}`;
-          alert("You claimed 20 coins!");
-        };
-      } else {
-        claimBtn.disabled = true;
-        claimBtn.textContent = "Already Claimed Today";
-      }
+        alert("🎉 You claimed 20 coins!");
+        location.reload();
+      });
     });
   </script>
 </body>
