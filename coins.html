@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💰 My Coins | Rahl Host</title>
+  <title>My Coins | Rahl Host</title>
   <style>
     body {
       margin: 0;
@@ -11,6 +11,7 @@
       background-color: #0a0a0a;
       color: #fff;
     }
+
     .menu-toggle {
       position: fixed;
       top: 20px;
@@ -22,6 +23,7 @@
       border: none;
       cursor: pointer;
     }
+
     .sidebar {
       position: fixed;
       top: 0;
@@ -34,9 +36,11 @@
       z-index: 1050;
       padding-top: 60px;
     }
+
     .sidebar.open {
       transform: translateX(0);
     }
+
     .sidebar a {
       display: block;
       padding: 15px;
@@ -44,9 +48,11 @@
       text-decoration: none;
       border-bottom: 1px solid #222;
     }
+
     .sidebar a:hover {
       background: #222;
     }
+
     .overlay {
       position: fixed;
       top: 0;
@@ -57,33 +63,42 @@
       z-index: 1040;
       display: none;
     }
+
     .overlay.active {
       display: block;
     }
+
     .main-content {
       padding: 20px;
-      max-width: 600px;
+      max-width: 700px;
       margin: 80px auto 0 auto;
       text-align: center;
     }
-    .coins-box {
-      font-size: 28px;
-      background: #111;
-      padding: 20px;
-      margin-top: 20px;
-      border-radius: 10px;
-      border: 1px solid #333;
+
+    h1 {
+      color: #00ffff;
     }
-    button.claim-btn {
-      margin-top: 25px;
+
+    .coin-box {
+      font-size: 22px;
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background-color: #111;
+    }
+
+    .claim-btn {
+      margin-top: 15px;
       padding: 12px 25px;
-      background: linear-gradient(to right, #00ffcc, #0066ff);
+      background: linear-gradient(to right, #00ffff, #0077ff);
+      border: none;
       color: #000;
       font-weight: bold;
-      border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
     }
+
     .footer {
       text-align: center;
       margin-top: 60px;
@@ -93,8 +108,8 @@
   </style>
 </head>
 <body>
-
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
   <nav class="sidebar" id="sidebar">
     <a href="dashboard.html">🏠 Dashboard</a>
     <a href="mybots.html">🤖 My Bots</a>
@@ -103,12 +118,13 @@
     <a href="deploy.html">⚙️ Deploy Bot</a>
     <a href="#" onclick="logout()">🚪 Logout</a>
   </nav>
+
   <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
   <div class="main-content">
     <h1>💰 My Coins</h1>
     <p>Your current coin balance:</p>
-    <div class="coins-box" id="coinBalance">Loading...</div>
+    <div class="coin-box" id="coinBalance">Loading...</div>
 
     <button class="claim-btn" onclick="claimCoins()">🪙 Claim Daily Coins (20)</button>
 
@@ -118,7 +134,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -134,10 +150,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const coinBalanceEl = document.getElementById("coinBalance");
-    let currentUserRef;
-    let userData;
-
     window.toggleMenu = () => {
       document.getElementById("sidebar").classList.toggle("open");
       document.getElementById("overlay").classList.toggle("active");
@@ -148,40 +160,55 @@
       window.location.href = "login.html";
     };
 
+    let currentUser;
+
+    const coinBalance = document.getElementById("coinBalance");
+
     async function claimCoins() {
-      if (!userData || !currentUserRef) return;
+      if (!currentUser) return alert("Not logged in");
 
-      const now = Timestamp.now();
-      const lastClaimed = userData.lastclaimed || Timestamp.fromDate(new Date(0));
-      const nextClaimTime = new Date(lastClaimed.toDate().getTime() + 24 * 60 * 60 * 1000);
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
 
-      if (now.toDate() < nextClaimTime) {
-        alert(`⏳ You can claim coins again after: ${nextClaimTime.toLocaleString()}`);
+      const now = new Date();
+      const lastClaimed = userData.lastclaimed?.toDate?.() || new Date(0);
+      const canClaim = now.getDate() !== lastClaimed.getDate() ||
+                       now.getMonth() !== lastClaimed.getMonth() ||
+                       now.getFullYear() !== lastClaimed.getFullYear();
+
+      if (!canClaim) {
+        alert("⏳ You already claimed coins today. Try again tomorrow.");
         return;
       }
 
       const newCoins = (userData.coins || 0) + 20;
 
-      await updateDoc(currentUserRef, {
+      await updateDoc(userRef, {
         coins: newCoins,
-        lastclaimed: now
+        lastclaimed: new Date()
       });
 
+      coinBalance.textContent = newCoins + " 🪙";
       alert("✅ You claimed 20 coins!");
-      coinBalanceEl.textContent = `${newCoins}`;
     }
+
+    window.claimCoins = claimCoins; // ✅ this exposes the function
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
-      currentUserRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(currentUserRef);
-      if (!userSnap.exists()) return alert("User not found");
+      currentUser = user;
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-      userData = userSnap.data();
-      coinBalanceEl.textContent = userData.coins || 0;
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        coinBalance.textContent = (userData.coins || 0) + " 🪙";
+      } else {
+        coinBalance.textContent = "0 🪙";
+      }
     });
   </script>
-
 </body>
-</html>
+</html> 
