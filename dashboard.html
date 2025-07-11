@@ -128,7 +128,7 @@
     <div class="stat-box" id="totalBots">0<br><small>Total Bots</small></div>
     <div class="stat-box" id="activeBots">0<br><small>Active Bots</small></div>
     <div class="stat-box" id="inactiveBots">0<br><small>Inactive Bots</small></div>
-    <div class="stat-box" id="coins">10<br><small>Coins</small></div>
+    <div class="stat-box" id="coins">Loading...<br><small>Coins</small></div>
 
     <p>No bots deployed yet</p>
     <a href="deploy.html" class="deploy-btn">🚀 Deploy New Bot</a>
@@ -183,7 +183,7 @@
 
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
-      const username = userData.fullName.toLowerCase().replace(/\s+/g, '');
+      const username = userData.fullname.toLowerCase().replace(/\s+/g, '');
 
       usernameSpan.textContent = username;
       refLinkEl.textContent = `https://rahl-host.vercel.app/signup.html?ref=${username}`;
