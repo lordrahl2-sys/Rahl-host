@@ -117,7 +117,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, updateDoc, increment
+      getFirestore, doc, getDoc, updateDoc, increment, Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -126,8 +126,7 @@
       projectId: "rahl-host",
       storageBucket: "rahl-host.appspot.com",
       messagingSenderId: "98638028534",
-      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
-      measurementId: "G-5SD4095M7R"
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -147,6 +146,11 @@
       window.location.href = "login.html";
     };
 
+    async function refreshCoins(userRef) {
+      const newSnap = await getDoc(userRef);
+      coinCount.textContent = newSnap.data().coins || 0;
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
@@ -154,7 +158,7 @@
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        alert("User document not found!");
+        alert("User not found.");
         return;
       }
 
@@ -165,24 +169,22 @@
         const now = new Date();
         const lastClaimed = userData.lastclaimed?.toDate?.() || new Date(0);
 
-        // Check if already claimed today
-        if (
-          now.toDateString() === lastClaimed.toDateString()
-        ) {
-          alert("❌ You've already claimed coins today. Try again at midnight.");
+        if (now.toDateString() === lastClaimed.toDateString()) {
+          alert("❌ Already claimed today. Try again after midnight.");
           return;
         }
 
         try {
           await updateDoc(userRef, {
             coins: increment(20),
-            lastclaimed: now
+            lastclaimed: Timestamp.fromDate(now)
           });
-          coinCount.textContent = (userData.coins || 0) + 20;
+
+          await refreshCoins(userRef);
           alert("✅ 20 coins claimed!");
           claimBtn.disabled = true;
         } catch (e) {
-          alert("Error claiming coins: " + e.message);
+          alert("❌ Error: " + e.message);
         }
       };
     });
