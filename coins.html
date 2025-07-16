@@ -15,24 +15,24 @@
       position: fixed;
       top: 20px;
       left: 20px;
+      z-index: 1100;
       font-size: 24px;
-      color: #00ffff;
       background: none;
+      color: #00ffff;
       border: none;
       cursor: pointer;
-      z-index: 1000;
     }
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 220px;
       height: 100%;
+      width: 220px;
       background-color: #111;
       transform: translateX(-100%);
       transition: transform 0.3s ease-in-out;
+      z-index: 1050;
       padding-top: 60px;
-      z-index: 999;
     }
     .sidebar.open {
       transform: translateX(0);
@@ -45,7 +45,7 @@
       border-bottom: 1px solid #222;
     }
     .sidebar a:hover {
-      background-color: #222;
+      background: #222;
     }
     .overlay {
       position: fixed;
@@ -53,40 +53,30 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
       display: none;
-      z-index: 998;
     }
     .overlay.active {
       display: block;
     }
     .main-content {
       padding: 20px;
-      max-width: 700px;
-      margin: 80px auto 0 auto;
-      text-align: center;
+      max-width: 800px;
+      margin: 80px auto;
     }
-    h1 {
-      color: #00ffff;
-    }
-    .coin-box {
-      font-size: 28px;
-      margin: 30px 0;
-      padding: 20px;
-      background-color: #111;
-      border: 1px solid #333;
-      border-radius: 10px;
-    }
-    button {
-      background-color: #00ffff;
-      color: #000;
+    .btn {
+      margin-top: 20px;
       padding: 12px 20px;
-      font-weight: bold;
+      background: linear-gradient(to right, #00ffff, #0077ff);
       border: none;
+      color: #000;
       border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
     }
     .footer {
+      text-align: center;
       margin-top: 60px;
       font-size: 13px;
       color: #666;
@@ -94,6 +84,7 @@
   </style>
 </head>
 <body>
+
   <button class="menu-toggle" onclick="toggleMenu()">☰</button>
   <nav class="sidebar" id="sidebar">
     <a href="dashboard.html">🏠 Dashboard</a>
@@ -108,17 +99,15 @@
   <div class="main-content">
     <h1>💰 My Coins</h1>
     <p>Your current coin balance:</p>
-    <div class="coin-box" id="coinCount">Loading...</div>
-    <button id="claimBtn">🪙 Claim Daily Coins (20)</button>
+    <h2 id="coinBalance">Loading...</h2>
+    <button class="btn" id="claimBtn">🪙 Claim Daily Coins (20)</button>
     <div class="footer">© 2025 Rahl Host. All rights reserved.</div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, increment, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAkDLjFGnGudVZXqMmvTAxs72mwDD3hDks",
@@ -126,16 +115,12 @@
       projectId: "rahl-host",
       storageBucket: "rahl-host.appspot.com",
       messagingSenderId: "98638028534",
-      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7",
-      measurementId: "G-5SD4095M7R"
+      appId: "1:98638028534:web:1f9ad66a58bd1af52d56d7"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
-    const coinCount = document.getElementById("coinCount");
-    const claimBtn = document.getElementById("claimBtn");
 
     window.toggleMenu = () => {
       document.getElementById("sidebar").classList.toggle("open");
@@ -144,57 +129,71 @@
 
     window.logout = async () => {
       await signOut(auth);
+      alert("Signed out.");
       window.location.href = "login.html";
     };
+
+    const claimBtn = document.getElementById("claimBtn");
+    const coinBalance = document.getElementById("coinBalance");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
 
       const userRef = doc(db, "users", user.uid);
-      let userSnap = await getDoc(userRef);
+      const snap = await getDoc(userRef);
 
-      if (!userSnap.exists()) {
-        // Create the user doc if not found
-        await setDoc(userRef, {
-          coins: 0,
-          lastclaimed: new Date(0),
-          username: user.email.split('@')[0],
-          email: user.email,
-          referralcode: user.uid,
-          referredBy: "",
-          fullname: user.displayName || "User"
-        });
-        userSnap = await getDoc(userRef);
+      if (!snap.exists()) {
+        coinBalance.innerText = "0 coins";
+        return;
       }
 
-      const userData = userSnap.data();
-      coinCount.textContent = userData.coins || 0;
+      const data = snap.data();
+      const currentCoins = data.coins !== undefined ? data.coins : 0;
+      coinBalance.innerText = `${currentCoins} coins`;
 
       claimBtn.onclick = async () => {
         const now = new Date();
-        const lastClaimed = userData.lastclaimed?.toDate?.() || new Date(0);
+        const lastClaim = data.lastclaimed?.toDate?.() || new Date(0);
+        const msInDay = 24 * 60 * 60 * 1000;
 
-        if (now.toDateString() === lastClaimed.toDateString()) {
-          alert("❌ You've already claimed today. Try again at midnight.");
+        if ((now - lastClaim) < msInDay) {
+          alert("⚠️ You already claimed your daily coins. Try again tomorrow.");
           return;
         }
 
-        try {
-          await updateDoc(userRef, {
-            coins: increment(20),
-            lastclaimed: serverTimestamp()
-          });
+        // reward referrer if first time claim
+        if (data.referredBy) {
+          const refQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
+          const refSnap = await getDocs(refQuery);
 
-          // Re-fetch after update
-          const updatedSnap = await getDoc(userRef);
-          const updated = updatedSnap.data();
-          coinCount.textContent = updated.coins || 0;
+          if (refSnap.empty) {
+            // Add to referrals and reward referrer
+            await setDoc(doc(collection(db, "referrals")), {
+              referredUserId: user.uid,
+              referrerUserId: data.referredBy,
+              rewardGiven: true,
+              timestamp: new Date()
+            });
 
-          alert("✅ 20 coins claimed!");
-          claimBtn.disabled = true;
-        } catch (e) {
-          alert("❌ Error claiming coins: " + e.message);
+            const referrerQuery = query(collection(db, "users"), where("referralcode", "==", data.referredBy));
+            const referrerSnap = await getDocs(referrerQuery);
+
+            if (!referrerSnap.empty) {
+              const referrerDoc = referrerSnap.docs[0];
+              await updateDoc(referrerDoc.ref, {
+                coins: (referrerDoc.data().coins || 0) + 20
+              });
+            }
+          }
         }
+
+        await updateDoc(userRef, {
+          coins: currentCoins + 20,
+          lastclaimed: new Date()
+        });
+
+        alert("✅ You have received 20 coins!");
+        window.location.reload();
       };
     });
   </script>
