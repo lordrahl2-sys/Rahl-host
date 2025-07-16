@@ -79,13 +79,22 @@
       color: #00ffff;
     }
 
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
     .stat-box {
       background: #111;
       padding: 20px;
-      margin: 15px 0;
       border-radius: 10px;
       border: 1px solid #333;
       font-size: 24px;
+      flex: 1 1 150px;
+      max-width: 200px;
     }
 
     .footer {
@@ -125,10 +134,13 @@
     <h1>👑 Rahl Host Panel</h1>
     <p>Welcome, <span id="username">loading user info...</span></p>
 
-    <div class="stat-box" id="totalBots">0<br><small>Total Bots</small></div>
-    <div class="stat-box" id="activeBots">0<br><small>Active Bots</small></div>
-    <div class="stat-box" id="inactiveBots">0<br><small>Inactive Bots</small></div>
-    <div class="stat-box" id="coins">Loading...<br><small>Coins</small></div>
+    <!-- 📊 Stat Boxes Grid -->
+    <div class="stats-container">
+      <div class="stat-box" id="totalBots">0<br><small>Total Bots</small></div>
+      <div class="stat-box" id="activeBots">0<br><small>Active Bots</small></div>
+      <div class="stat-box" id="inactiveBots">0<br><small>Inactive Bots</small></div>
+      <div class="stat-box" id="coins">Loading...<br><small>Coins</small></div>
+    </div>
 
     <p>No bots deployed yet</p>
     <a href="deploy.html" class="deploy-btn">🚀 Deploy New Bot</a>
